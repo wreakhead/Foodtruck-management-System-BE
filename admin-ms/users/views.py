@@ -26,21 +26,18 @@ class LoginView(APIView):
         admin = request.data['admin']
         password = request.data['password']
 
-        user = User.objects.filter(admin = admin).first()
-        
+        user = User.objects.get(admin = admin)
 
         if user is None:
             raise AuthenticationFailed('User not found')
         if not user.check_password(password):
             raise AuthenticationFailed('Incorrect password')
-
         payload = {
             'id':user.id,
             'exp':datetime.datetime.utcnow()+datetime.timedelta(minutes=int(os.environ['JWT_EXP'])),
             'iat':datetime.datetime.utcnow()
         }
         token = jwt.encode(payload,os.environ['SECRET_HASH'],algorithm='HS256').decode('utf-8')
-
         response = Response()
 
         response.set_cookie(key=os.environ['JWT_ALIAS'],value=token,httponly=True)
@@ -50,6 +47,7 @@ class LoginView(APIView):
         }
 
         return response
+
 
 
 class AddTruck(APIView):
